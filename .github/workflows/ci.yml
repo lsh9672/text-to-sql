@@ -55,10 +55,10 @@ jobs:
         cd deployment
         
         # sed로 이미지 태그 업데이트
-        sed -i "s|sh80165/text-to-sql:.*|sh80165/text-to-sql:${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BUILD_DATE }}_${{ env.SHORT_SHA }}|g" ${{ env.MANIFEST_FILE_PATH }}
+        sed -i "s|sh80165/text-to-sql:.*|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BUILD_DATE }}_${{ env.SHORT_SHA }}|g" ${{ env.MANIFEST_FILE_PATH }}
         
         git config user.name "lsh9672"
         git config user.email "lsh80165@gmail.com"
         git add .
         git commit -m "Feat : Update text-to-sql image to ${{ github.sha }}"
-        git push
+        git push origin main
