@@ -2,6 +2,10 @@ from langchain.prompts import PromptTemplate
 from app.infra.external.llm import OpenAIChatClient
 from app.core.interface import RagRepository
 from app.di_container import DIContainer
+from langfuse import Langfuse
+from langfuse.callback import CallbackHandler
+import os
+from langchain_core.prompts import ChatPromptTemplate
 
 from app.config import sql_prompt, sql_explain_prompt
 
@@ -12,6 +16,15 @@ class SqlGenerationService:
         
         self.chat_client = OpenAIChatClient()
         self.vector_repository = DIContainer.get(RagRepository)
+        
+        ##Langfuse 클라이언트 생성.
+        self.langfuse = Langfuse(
+            public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
+            secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
+            host=os.getenv("LANGFUSE_HOST")
+        )
+        
+        self.langfuse_handler = CallbackHandler()
         
     
     ##응답 쿼리에서 코드블럭 제거
@@ -63,13 +76,23 @@ class SqlGenerationService:
         )
         
         ##4. LLM에 프롬프트 전달.
-        prompt = self.prompt_template.format(
+        
+        langfuse_prompt = self.langfuse.get_prompt("sql_prompt", cache_ttl_seconds=0)
+        
+        langchain_prompt = ChatPromptTemplate.from_template(
+            langfuse_prompt.get_langchain_prompt(),
+            metadata={"langfuse_prompt": langfuse_prompt}
+        )
+        prompt = langchain_prompt.format(
             context = context,
             question = question
         )
         
         #5. llm에 프롬프트 전달.    
-        llm_response = self.chat_client.chat_llm.invoke(prompt)
+        llm_response = self.chat_client.chat_llm.invoke(
+            prompt,
+            config={"callbacks": [self.langfuse_handler]}
+        )
         
         # 데이터가 코드블럭 형태로 오기 때문에 슬랙에 넘겨주면 코드블럭으로 보기 편할듯.
         # 응답쿼리를 바로 실행하는 기능을 만들라면 코드블럭 데이터 제거가 필요할 듯.

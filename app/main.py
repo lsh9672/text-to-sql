@@ -21,7 +21,7 @@ app = FastAPI(title="RAG SQL API", version="1.0.0",lifespan=lifespan)
 
 def setup_dependencies():
     from app.infra.repository import PGVectorRepositoryImpl, PostgreSQLCatalogRepository
-    from app.core.service import SqlGenerationService
+    from app.core.service import SqlGenerationService, SqlGenerationMcpService
     from app.core.service.rag_generation_service import RagGenerationService
     from app.core.service.catalog_document_converter import CatalogDocumentConverter
     from app.core.interface import RagRepository, DBCatalogExtractor
@@ -31,6 +31,7 @@ def setup_dependencies():
     DIContainer.register(RagRepository, PGVectorRepositoryImpl())
     DIContainer.register(DBCatalogExtractor, PostgreSQLCatalogRepository())
     DIContainer.register(SqlGenerationService, SqlGenerationService())
+    DIContainer.register(SqlGenerationMcpService, SqlGenerationMcpService())
     DIContainer.register(CatalogDocumentConverter, CatalogDocumentConverter())
     DIContainer.register(RagGenerationService, RagGenerationService())
     
