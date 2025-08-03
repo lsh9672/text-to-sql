@@ -8,7 +8,7 @@ env:
   REGISTRY: docker.io
   IMAGE_NAME: sh80165/text-to-sql
   MANIFEST_REPO: lsh9672/text-to-sql-manifest
-  MANIFEST_FILE_PATH: langchain/app/deployment.yml
+  MANIFEST_FILE_PATH: langchain/app/deployment.yaml
 
 jobs:
   build-push:
