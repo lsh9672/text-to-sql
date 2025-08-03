@@ -25,18 +25,20 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Set build date
-      run: echo "BUILD_DATE=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-
-    - name: Set short SHA
-      run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+    - name: Set build info
+      id: build-info
+      run: |
+        BUILD_DATE=$(date +%Y%m%d%H%M)
+        SHORT_SHA=${GITHUB_SHA::7}
+        echo "build-date=$BUILD_DATE" >> $GITHUB_OUTPUT
+        echo "short-sha=$SHORT_SHA" >> $GITHUB_OUTPUT
 
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BUILD_DATE }}_${{ env.SHORT_SHA }}
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.build-info.outputs.build-date }}_${{ steps.build-info.outputs.short-sha }}
 
   update-deployment:
     needs: build-push
@@ -55,7 +57,7 @@ jobs:
         cd deployment
         
         # sed로 이미지 태그 업데이트
-        sed -i "s|sh80165/text-to-sql:.*|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BUILD_DATE }}_${{ env.SHORT_SHA }}|g" ${{ env.MANIFEST_FILE_PATH }}
+        sed -i "s|sh80165/text-to-sql:.*|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.build-date }}_${{ needs.build-push.outputs.short-sha }}|g" ${{ env.MANIFEST_FILE_PATH }}
         
         git config user.name "lsh9672"
         git config user.email "lsh80165@gmail.com"
