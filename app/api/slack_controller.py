@@ -53,14 +53,14 @@ async def slack_events(request: Request):
                 user = event.get("user")
                 
                 if not clean_text:
-                    send_slack_message(
+                    await send_slack_message(
                         channel,
                         f"🤖 안녕하세요 <@{user}> 님! *QueryPorter*입니다.\n쿼리를 입력해주세요!\n\n*예시:* `@QueryPorter 사용자 테이블에서 활성 사용자 수 조회해줘`"
                     )
                     return {"status": "ok"}
                 
                 # 로딩 메시지
-                initial_response = send_slack_message(channel, f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
+                initial_response = await send_slack_message(channel, f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
                 print("loading message => " + str(initial_response))
                 
                 #타임스탬프 => 기존 메시지를 수정하는 방식으로 변경.
