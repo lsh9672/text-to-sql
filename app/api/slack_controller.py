@@ -119,7 +119,7 @@ async def slack_events(request: Request):
     return {"status": "ok"}
     
 ##슬랙 응답 이벤트
-def send_slack_message(channel: str, sql_response: str):
+async def send_slack_message(channel: str, sql_response: str):
     """Slack SDK를 사용해서 메시지 전송"""
     try:
         response = slack_client.chat_postMessage(
