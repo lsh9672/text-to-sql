@@ -109,7 +109,7 @@ async def slack_events(request: Request):
                 )
                 
             except Exception as e:
-                send_slack_message(
+                await send_slack_message(
                     channel,
                     f"❌ 오류가 발생했습니다: {str(e)}"
                 )
