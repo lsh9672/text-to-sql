@@ -16,6 +16,10 @@ slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 @router.post("/events")
 async def slack_events(request: Request):
     
+    print(f"=== 새로운 요청 시작 ===")
+    print(f"Request ID: {id(request)}")
+    print(f"Headers: {dict(request.headers)}")
+    
     start_time = time.time()
     
     sqlGenService = DIContainer.get(SqlGenerationService)
@@ -23,7 +27,7 @@ async def slack_events(request: Request):
     ##슬랫 봇이 보낸 값 json 형태로 추출
     try:
         event_data = await request.json()
-        print(event_data)
+        print(f"event_data => {event_data}")
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     
