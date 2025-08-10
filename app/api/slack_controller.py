@@ -124,14 +124,13 @@ async def send_slack_message(thread_ts:str, channel: str, sql_response: str):
         raise
     
 ##sql 생성부분을 백그래운드에서 처리
-async def process_sql_backgroud(event_data, message_ts, clean_text, channel, user):
+async def process_sql_backgroud(thread_ts:str, event_data, message_ts, clean_text, channel, user):
     event_id = event_data.get("event_id")
     
     sqlGenService = DIContainer.get(SqlGenerationService)
     
     try: 
 
-        thread_ts = event_data.get("thread_ts", None)
         # SQL 생성 API 호출
         sql_result = sqlGenService.generate_sql(
             prompt_type = False,
