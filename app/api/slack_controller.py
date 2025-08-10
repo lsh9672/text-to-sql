@@ -24,16 +24,10 @@ executor = ThreadPoolExecutor(max_workers=5)
 @router.post("/events")
 async def slack_events(request: Request):
     
-    print(f"=== 새로운 요청 시작 ===")
-    print(f"Request ID: {id(request)}")
-    print(f"Headers: {dict(request.headers)}")
-    
-    start_time = time.time()
     
     ##슬랫 봇이 보낸 값 json 형태로 추출
     try:
         event_data = await request.json()
-        print(f"event_data => {event_data}")
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     
@@ -90,7 +84,6 @@ async def slack_events(request: Request):
                 thread_ts=reply_thread_ts,
                 channel=channel, 
                 sql_response=f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
-            print("loading message => " + str(initial_response))
             
             ##오래걸리는 sql생성 로직은 백그라운드에서 처리하도록 변경
             asyncio.create_task(process_sql_backgroud(
@@ -103,15 +96,12 @@ async def slack_events(request: Request):
                 )
             )
                 
-    end_time = time.time()
-    print(f"전체 응답 시간: {end_time - start_time:.3f}초")
     return {"status": "ok"}
     
 ##슬랙 응답 이벤트
 async def send_slack_message(thread_ts:str, channel: str, sql_response: str):
     """Slack SDK를 사용해서 메시지 전송"""
     try:
-        print(f"댓글에서 메시지 보낼때 스레드 ts 값 => {thread_ts}")
         response = slack_client.chat_postMessage(
             channel=channel,
             text=sql_response,
@@ -165,7 +155,6 @@ async def process_sql_backgroud(thread_ts:str, event_data, message_ts, clean_tex
             }
         ]
         
-        print(response_blocks)
         # 블록 형식으로 메시지 전송
         slack_client.chat_update(
             channel=channel,
