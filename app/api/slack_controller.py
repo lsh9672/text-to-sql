@@ -62,7 +62,6 @@ async def slack_events(request: Request):
                 return {"status": "ok"}
             
             
-            
             # 멘션 텍스트에서 실제 쿼리 추출
             message_text = event.get("text", "")
             # <@U0LAN0Z89> 형태의 멘션 제거
@@ -104,7 +103,7 @@ async def slack_events(request: Request):
 async def send_slack_message(thread_ts:str, channel: str, sql_response: str):
     """Slack SDK를 사용해서 메시지 전송"""
     try:
-        
+        print(f"댓글에서 메시지 보낼때 스레드 ts 값 => {thread_ts}")
         response = slack_client.chat_postMessage(
             channel=channel,
             text=sql_response,
