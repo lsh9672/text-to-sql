@@ -82,7 +82,7 @@ async def slack_events(request: Request):
             # 로딩 메시지
             initial_response = await send_slack_message(
                 thread_ts=thread_ts,
-                thrchannelead_ts=channel, 
+                channel=channel, 
                 sql_response=f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
             print("loading message => " + str(initial_response))
             
