@@ -43,7 +43,8 @@ async def slack_events(request: Request):
     
     if event_data.get("type") == "event_callback":
         event = event_data.get("event", {})
-        thread_ts = event_data.get("thread_ts", None)
+        thread_ts = event.get("thread_ts", None)
+        
         # app_mention 이벤트만 처리
         if event.get("type") == "app_mention":
             
@@ -70,9 +71,15 @@ async def slack_events(request: Request):
             channel = event.get("channel")
             user = event.get("user")
             
+            reply_thread_ts = None
+            if thread_ts:
+                reply_thread_ts = thread_ts
+            else:
+                reply_thread_ts = event.get("ts")
+            
             if not clean_text:
                 await send_slack_message(
-                    thread_ts=thread_ts,
+                    thread_ts=reply_thread_ts,
                     channel=channel,
                     sql_response=f"🤖 안녕하세요 <@{user}> 님! *QueryPorter*입니다.\n쿼리를 입력해주세요!\n\n*예시:* `@QueryPorter 사용자 테이블에서 활성 사용자 수 조회해줘`"
                 )
@@ -80,7 +87,7 @@ async def slack_events(request: Request):
             
             # 로딩 메시지
             initial_response = await send_slack_message(
-                thread_ts=thread_ts,
+                thread_ts=reply_thread_ts,
                 channel=channel, 
                 sql_response=f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
             print("loading message => " + str(initial_response))
@@ -91,7 +98,8 @@ async def slack_events(request: Request):
                     message_ts = initial_response["ts"], #타임스탬프 => 기존 메시지를 수정하는 방식으로 변경.
                     clean_text = clean_text, #멘션을 제거한 요청 텍스트.
                     channel = channel, #요청한 채널
-                    user = user # 요청한 유저
+                    user = user, # 요청한 유저
+                    thread_ts=reply_thread_ts
                 )
             )
                 
