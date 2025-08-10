@@ -30,8 +30,6 @@ async def slack_events(request: Request):
     
     start_time = time.time()
     
-    sqlGenService = DIContainer.get(SqlGenerationService)
-    
     ##슬랫 봇이 보낸 값 json 형태로 추출
     try:
         event_data = await request.json()
@@ -45,6 +43,7 @@ async def slack_events(request: Request):
     
     if event_data.get("type") == "event_callback":
         event = event_data.get("event", {})
+        thread_ts = event_data.get("thread_ts", None)
         # app_mention 이벤트만 처리
         if event.get("type") == "app_mention":
             
@@ -63,6 +62,7 @@ async def slack_events(request: Request):
                 return {"status": "ok"}
             
             
+            
             # 멘션 텍스트에서 실제 쿼리 추출
             message_text = event.get("text", "")
             # <@U0LAN0Z89> 형태의 멘션 제거
@@ -73,13 +73,17 @@ async def slack_events(request: Request):
             
             if not clean_text:
                 await send_slack_message(
-                    channel,
-                    f"🤖 안녕하세요 <@{user}> 님! *QueryPorter*입니다.\n쿼리를 입력해주세요!\n\n*예시:* `@QueryPorter 사용자 테이블에서 활성 사용자 수 조회해줘`"
+                    thread_ts=thread_ts,
+                    channel=channel,
+                    sql_response=f"🤖 안녕하세요 <@{user}> 님! *QueryPorter*입니다.\n쿼리를 입력해주세요!\n\n*예시:* `@QueryPorter 사용자 테이블에서 활성 사용자 수 조회해줘`"
                 )
                 return {"status": "ok"}
             
             # 로딩 메시지
-            initial_response = await send_slack_message(channel, f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
+            initial_response = await send_slack_message(
+                thread_ts=thread_ts,
+                thrchannelead_ts=channel, 
+                sql_response=f"🤖 <@{user}>님!, SQL 쿼리를 생성하고 있습니다...")
             print("loading message => " + str(initial_response))
             
             ##오래걸리는 sql생성 로직은 백그라운드에서 처리하도록 변경
@@ -97,12 +101,14 @@ async def slack_events(request: Request):
     return {"status": "ok"}
     
 ##슬랙 응답 이벤트
-async def send_slack_message(channel: str, sql_response: str):
+async def send_slack_message(thread_ts:str, channel: str, sql_response: str):
     """Slack SDK를 사용해서 메시지 전송"""
     try:
+        
         response = slack_client.chat_postMessage(
             channel=channel,
             text=sql_response,
+            thread_ts = thread_ts,
             mrkdwn=True  # 마크다운 형식 지원
         )
         return response
@@ -117,7 +123,8 @@ async def process_sql_backgroud(event_data, message_ts, clean_text, channel, use
     sqlGenService = DIContainer.get(SqlGenerationService)
     
     try: 
-    
+
+        thread_ts = event_data.get("thread_ts", None)
         # SQL 생성 API 호출
         sql_result = sqlGenService.generate_sql(
             prompt_type = False,
@@ -162,8 +169,9 @@ async def process_sql_backgroud(event_data, message_ts, clean_text, channel, use
         
     except Exception as e:
         await send_slack_message(
-            channel,
-            f"❌ 오류가 발생했습니다: {str(e)}"
+            thread_ts=thread_ts,
+            channel=channel,
+            sql_response=f"❌ 오류가 발생했습니다: {str(e)}"
         )
     finally: 
     
