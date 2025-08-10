@@ -120,7 +120,7 @@ async def slack_events(request: Request):
     
     end_time = time.time()
     print(f"전체 응답 시간: {end_time - start_time:.3f}초")
-    return {"status": "ok"}
+    return {"status": "ok"}, {"x-slack-no-retry": "1"}
     
 ##슬랙 응답 이벤트
 async def send_slack_message(channel: str, sql_response: str):
